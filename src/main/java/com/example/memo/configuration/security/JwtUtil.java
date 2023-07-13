@@ -12,10 +12,15 @@ import java.security.Key;
 import java.util.Date;
 import lombok.experimental.UtilityClass;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.context.annotation.Bean;
+import org.springframework.stereotype.Component;
 import org.springframework.util.StringUtils;
+
 
 @Slf4j
 @UtilityClass
+@Component
 public class JwtUtil {
 	private final String AUTHORIZATION_HEADER = "Authorization";
 	private final String AUTHORIZATION_KEY = "auth";

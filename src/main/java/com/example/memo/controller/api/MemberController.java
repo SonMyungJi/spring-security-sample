@@ -2,6 +2,7 @@ package com.example.memo.controller.api;
 
 import com.example.memo.domain.entity.Member;
 import com.example.memo.domain.model.AuthorizedMember;
+import com.example.memo.domain.model.getAuthMember;
 import com.example.memo.dto.LoginRequest;
 import com.example.memo.dto.MemberInfo;
 import com.example.memo.dto.SignupRequest;
@@ -34,7 +35,7 @@ public class MemberController {
 	}
 
 	@GetMapping("")
-	public ResponseEntity<MemberInfo> getMemberInfo(@AuthenticationPrincipal AuthorizedMember authorizedMember) {
+	public ResponseEntity<MemberInfo> getMemberInfo(@getAuthMember AuthorizedMember authorizedMember) {
 		if (authorizedMember == null) {
 			return ResponseEntity.badRequest().build();
 		}
