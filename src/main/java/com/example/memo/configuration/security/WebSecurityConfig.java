@@ -1,11 +1,14 @@
 package com.example.memo.configuration.security;
 
+import com.example.memo.domain.model.LoginMemberArgumentResolver;
 import com.example.memo.service.MemberService;
 import jakarta.persistence.PersistenceContext;
 import lombok.RequiredArgsConstructor;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.autoconfigure.security.servlet.PathRequest;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.context.annotation.Lazy;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.config.annotation.authentication.configuration.AuthenticationConfiguration;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
@@ -15,6 +18,9 @@ import org.springframework.security.config.http.SessionCreationPolicy;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.security.web.SecurityFilterChain;
+import org.springframework.web.method.support.HandlerMethodArgumentResolver;
+
+import java.util.List;
 
 @Configuration
 @EnableWebSecurity
@@ -24,6 +30,7 @@ public class WebSecurityConfig {
 	private final JwtUtil jwtUtil;
 	private final MemberService memberService;
 	private final AuthenticationConfiguration authenticationConfiguration;
+	private final LoginMemberArgumentResolver loginMemberArgumentResolver;
 
 	@Bean
 	public PasswordEncoder passwordEncoder() {
@@ -57,5 +64,10 @@ public class WebSecurityConfig {
 				.anyRequest().authenticated());
 
 		return httpSecurity.build();
+	}
+
+	@Bean
+	public void addArgumentResolvers(List<HandlerMethodArgumentResolver> resolvers) {
+		resolvers.add(loginMemberArgumentResolver);
 	}
 }

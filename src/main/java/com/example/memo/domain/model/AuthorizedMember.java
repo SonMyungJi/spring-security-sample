@@ -11,7 +11,7 @@ import org.springframework.security.core.userdetails.User;
 public class AuthorizedMember extends User {
 	private final Member member;
 
-	public AuthorizedMember(@getAuthMember Member member) {
+	public AuthorizedMember(@LoginMember Member member) {
 		super(member.getEmail(), member.getPassword(),
 			Collections.singletonList(new SimpleGrantedAuthority("ROLE_MEMBER")));
 		this.member = member;

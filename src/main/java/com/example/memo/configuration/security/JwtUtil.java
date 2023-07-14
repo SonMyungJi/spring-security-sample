@@ -19,20 +19,19 @@ import org.springframework.util.StringUtils;
 
 
 @Slf4j
-@UtilityClass
 @Component
 public class JwtUtil {
 	private final String AUTHORIZATION_HEADER = "Authorization";
-	private final String AUTHORIZATION_KEY = "auth";
-	private final String BEARER_PREFIX = "Bearer ";
+	private static final String AUTHORIZATION_KEY = "auth";
+	private static final String BEARER_PREFIX = "Bearer ";
 
 	private final int VALUE_INDEX = 7;
-	private final long TOKEN_DURATION = 60 * 60 * 1000L; // 60분
+	private static final long TOKEN_DURATION = 60 * 60 * 1000L; // 60분
 
-	private final SignatureAlgorithm signatureAlgorithm = SignatureAlgorithm.HS256;
-	private final Key key = Keys.secretKeyFor(signatureAlgorithm);
+	private static final SignatureAlgorithm signatureAlgorithm = SignatureAlgorithm.HS256;
+	private static final Key key = Keys.secretKeyFor(signatureAlgorithm);
 
-	public String createToken(String username) {
+	public static String createToken(String username) {
 		Date now = new Date();
 
 		return BEARER_PREFIX +
