@@ -5,16 +5,18 @@ import io.jsonwebtoken.security.Keys;
 import jakarta.servlet.http.HttpServletRequest;
 import lombok.experimental.UtilityClass;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.stereotype.Component;
 import org.springframework.util.StringUtils;
 
 import java.security.Key;
 import java.util.Date;
 
+import static com.example.memo.configuration.security.redis.RedisUtil.redisBlacklistTemplate;
+
 
 @Slf4j
 @UtilityClass
 public class JwtUtil {
+
 	private final String AUTHORIZATION_HEADER = "Authorization";
 	private final String AUTHORIZATION_KEY = "auth";
 	private final String BEARER_PREFIX = "Bearer ";
@@ -24,6 +26,7 @@ public class JwtUtil {
 
 	private final SignatureAlgorithm signatureAlgorithm = SignatureAlgorithm.HS256;
 	private final Key key = Keys.secretKeyFor(signatureAlgorithm);
+
 
 	public String createTokenWithScheme(String username) {
 		Date now = new Date();
@@ -55,6 +58,11 @@ public class JwtUtil {
 
 	public boolean validateToken(String token) {
 		try {
+			if (redisBlacklistTemplate.opsForValue().get("blacklisted").equals(token)) {
+				log.error("Blacklisted JWT, 블랙리스트에 있는 토큰입니다.");
+				return false;
+			}
+
 			Jwts.parserBuilder().setSigningKey(key).build().parseClaimsJws(token);
 			return true;
 		} catch (SecurityException | MalformedJwtException e) {
@@ -69,18 +77,23 @@ public class JwtUtil {
 		return false;
 	}
 
-	// 3. 추출
 	public Claims getUserInfoFromToken(String token) {
-		return getClaimsJws(token).getBody();
+		return Jwts.parserBuilder().setSigningKey(key).build().parseClaimsJws(token).getBody();
 	}
 
-	// 2. 해석
-	private static Jws<Claims> getClaimsJws(String token) {
-		return getBuild().parseClaimsJws(token);
-	}
 
-	// 1. 인증
-	private static JwtParser getBuild() {
-		return Jwts.parserBuilder().setSigningKey(key).build();
-	}
+//	// 3. 추출
+//	public Claims getUserInfoFromToken(String token) {
+//		return getClaimsJws(token).getBody();
+//	}
+//
+//	// 2. 해석
+//	private static Jws<Claims> getClaimsJws(String token) {
+//		return getBuild().parseClaimsJws(token);
+//	}
+//
+//	// 1. 인증
+//	private static JwtParser getBuild() {
+//		return Jwts.parserBuilder().setSigningKey(key).build();
+//	}
 }

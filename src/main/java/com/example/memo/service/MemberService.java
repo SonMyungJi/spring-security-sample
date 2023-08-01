@@ -1,6 +1,7 @@
 package com.example.memo.service;
 
 import com.example.memo.configuration.security.JwtUtil;
+import com.example.memo.configuration.security.redis.RedisUtil;
 import com.example.memo.domain.entity.Member;
 import com.example.memo.domain.model.AuthorizedMember;
 import com.example.memo.dto.LoginRequest;
@@ -21,12 +22,13 @@ import org.springframework.stereotype.Service;
 public class MemberService {
 
 	private final MemberRepository memberRepository;
+	private final RedisUtil redisUtil;
 	private final PasswordEncoder passwordEncoder;
 
 	public void signup(SignupRequest signupRequest) {
 		Member member = new Member(signupRequest.email(), signupRequest.name(),
-			passwordEncoder.encode(signupRequest.password()), Set.of("ROLE_MEMBER"),
-			LocalDateTime.now());
+				passwordEncoder.encode(signupRequest.password()), Set.of("ROLE_MEMBER"),
+				LocalDateTime.now());
 
 		memberRepository.save(member);
 	}
@@ -41,6 +43,8 @@ public class MemberService {
 			throw new BadCredentialsException("잘못된 요청입니다. 아이디 또는 비밀번호를 확인해주세요.");
 		}
 
-		return JwtUtil.createTokenWithScheme(loginRequest.email());
+		String token = JwtUtil.createTokenWithScheme(loginRequest.email());
+
+		return token;
 	}
 }
