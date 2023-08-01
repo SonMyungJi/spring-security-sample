@@ -3,13 +3,17 @@ package com.example.memo.configuration.security;
 import jakarta.servlet.FilterChain;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
+import lombok.RequiredArgsConstructor;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.AuthenticationException;
 import org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter;
 
 import java.io.IOException;
 
+@RequiredArgsConstructor
 class JwtAuthenticationFilter extends UsernamePasswordAuthenticationFilter {
+
+	private final JwtUtil jwtUtil;
 
 	// AbstractAuthenticationProcessingFilter의 메서드를 override
 	// doFilter에서 인증에 성공 -> successfulAuthentication
@@ -22,10 +26,10 @@ class JwtAuthenticationFilter extends UsernamePasswordAuthenticationFilter {
 			return;
 		}
 
-		String tokenWithScheme = JwtUtil.createTokenWithScheme(authResult.getName());
-		String jwtToken = JwtUtil.getToken(tokenWithScheme);
+		String tokenWithScheme = jwtUtil.createTokenWithScheme(authResult.getName());
+		String jwtToken = jwtUtil.getToken(tokenWithScheme);
 
-		if (!JwtUtil.validateToken(jwtToken)) {
+		if (!jwtUtil.validateToken(jwtToken)) {
 			response.setStatus(HttpServletResponse.SC_UNAUTHORIZED);
 			return;
 		}

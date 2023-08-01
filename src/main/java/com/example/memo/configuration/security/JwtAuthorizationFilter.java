@@ -23,17 +23,18 @@ import static com.example.memo.configuration.security.WebSecurityConfig.ROLE_MEM
 @RequiredArgsConstructor
 class JwtAuthorizationFilter extends OncePerRequestFilter {
 
+	private final JwtUtil jwtUtil;
 	private final AuthorizedMemberProvider authorizedMemberProvider;
 
 	@Override
 	protected void doFilterInternal(HttpServletRequest request, HttpServletResponse response,
 									FilterChain filterChain) throws ServletException, IOException {
 		// TODO : 요청에 들어온 JWT를 parsing해서 "ROLE_MEMBER" 권한이 있는지 확인하고, SecurityContextHolder에 context 설정하기
-		String jwtToken = JwtUtil.getTokenFromHeader(request);
+		String jwtToken = jwtUtil.getTokenFromHeader(request);
 
 		if (!StringUtils.isEmpty(jwtToken)) {
 
-			Claims userInfo = JwtUtil.getUserInfoFromToken(jwtToken);
+			Claims userInfo = jwtUtil.getUserInfoFromToken(jwtToken);
 
 			String authority = (String) userInfo.get("auth");
 
@@ -48,4 +49,5 @@ class JwtAuthorizationFilter extends OncePerRequestFilter {
 
 		filterChain.doFilter(request, response);
 	}
+
 }

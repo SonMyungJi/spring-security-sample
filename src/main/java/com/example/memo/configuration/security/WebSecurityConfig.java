@@ -15,6 +15,7 @@ import org.springframework.security.config.http.SessionCreationPolicy;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.security.web.SecurityFilterChain;
+import org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter;
 import org.springframework.web.method.support.HandlerMethodArgumentResolver;
 
 import java.util.List;
@@ -24,6 +25,7 @@ import java.util.List;
 @RequiredArgsConstructor
 public class WebSecurityConfig {
 
+	private final JwtUtil jwtUtil;
 	public static final String ROLE_MEMBER = "ROLE_MEMBER";
 	private final AuthenticationConfiguration authenticationConfiguration;
 	private final AuthorizedMemberProvider authorizedMemberProvider;
@@ -37,7 +39,7 @@ public class WebSecurityConfig {
 
 	@Bean
 	public JwtAuthenticationFilter jwtAuthenticationFilter() throws Exception {
-		JwtAuthenticationFilter filter = new JwtAuthenticationFilter();
+		JwtAuthenticationFilter filter = new JwtAuthenticationFilter(jwtUtil);
 		filter.setAuthenticationManager(authenticationConfiguration.getAuthenticationManager());
 		filter.setRememberMeServices(rememberMeService);
 		return filter;
@@ -45,7 +47,7 @@ public class WebSecurityConfig {
 
 	@Bean
 	public JwtAuthorizationFilter jwtAuthorizationFilter() {
-		return new JwtAuthorizationFilter(authorizedMemberProvider);
+		return new JwtAuthorizationFilter(jwtUtil, authorizedMemberProvider);
 	}
 
 	@Bean
@@ -55,8 +57,6 @@ public class WebSecurityConfig {
 				.csrf(AbstractHttpConfigurer::disable)
 				.formLogin(Customizer.withDefaults())
 				.rememberMe(configurer -> configurer.rememberMeServices(rememberMeService))
-				.addFilter(jwtAuthenticationFilter())
-				.addFilterBefore(jwtAuthorizationFilter(), JwtAuthenticationFilter.class)
 				.sessionManagement(sessionManagement -> sessionManagement.sessionCreationPolicy(
 						SessionCreationPolicy.STATELESS))
 				.authorizeHttpRequests(httpRequests -> httpRequests
@@ -65,10 +65,12 @@ public class WebSecurityConfig {
 						.anyRequest().authenticated())
 //				.oauth2Login(Customizer.withDefaults());
 				.logout((logout -> logout
-						.logoutUrl("/api/auth/logout")
+						.logoutUrl("/api/members/logout")
 						.invalidateHttpSession(true)
 						.deleteCookies("jwt")
 						.addLogoutHandler(tokenLogoutHandler)));
+
+		httpSecurity.addFilterBefore(jwtAuthorizationFilter(), JwtAuthenticationFilter.class);
 
 		return httpSecurity.build();
 	}

@@ -34,6 +34,8 @@ public class RedisRepositoryConfig {
         redisTemplate.setValueSerializer(new StringRedisSerializer());
 
         redisTemplate.setDefaultSerializer(new StringRedisSerializer());
+
+        redisTemplate.afterPropertiesSet(); // 초기화 수행
         return redisTemplate;
     }
 }

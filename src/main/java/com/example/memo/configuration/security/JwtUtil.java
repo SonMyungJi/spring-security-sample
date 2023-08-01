@@ -3,18 +3,15 @@ package com.example.memo.configuration.security;
 import io.jsonwebtoken.*;
 import io.jsonwebtoken.security.Keys;
 import jakarta.servlet.http.HttpServletRequest;
-import lombok.experimental.UtilityClass;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.stereotype.Component;
 import org.springframework.util.StringUtils;
 
 import java.security.Key;
 import java.util.Date;
 
-import static com.example.memo.configuration.security.redis.RedisUtil.redisBlacklistTemplate;
-
-
 @Slf4j
-@UtilityClass
+@Component
 public class JwtUtil {
 
 	private final String AUTHORIZATION_HEADER = "Authorization";
@@ -30,11 +27,14 @@ public class JwtUtil {
 
 	public String createTokenWithScheme(String username) {
 		Date now = new Date();
+		String role = "ROLE_MEMBER";
+
+		// (AUTHORIZATION_KEY, "ROLE_MEMBER")에서 "ROLE_MEMBER"는 value로 인식
 
 		return BEARER_PREFIX +
 			Jwts.builder()
 				.setSubject(username) // 사용자 식별자값(ID)
-				.claim(AUTHORIZATION_KEY, "ROLE_MEMBER") // 사용자 권한
+				.claim(AUTHORIZATION_KEY, role) // 사용자 권한
 				.setExpiration(new Date(now.getTime() + TOKEN_DURATION)) // 만료 시간
 				.setIssuedAt(now) // 발급일
 				.signWith(key, signatureAlgorithm) // 암호화 알고리즘
@@ -58,11 +58,7 @@ public class JwtUtil {
 
 	public boolean validateToken(String token) {
 		try {
-			if (redisBlacklistTemplate.opsForValue().get("blacklisted").equals(token)) {
-				log.error("Blacklisted JWT, 블랙리스트에 있는 토큰입니다.");
-				return false;
-			}
-
+			// 토큰의 위변조, 만료 체크
 			Jwts.parserBuilder().setSigningKey(key).build().parseClaimsJws(token);
 			return true;
 		} catch (SecurityException | MalformedJwtException e) {

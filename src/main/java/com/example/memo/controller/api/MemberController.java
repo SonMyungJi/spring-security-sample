@@ -5,6 +5,7 @@ import com.example.memo.dto.LoginRequest;
 import com.example.memo.dto.MemberInfo;
 import com.example.memo.dto.SignupRequest;
 import com.example.memo.service.MemberService;
+import jakarta.servlet.http.HttpServletResponse;
 import lombok.RequiredArgsConstructor;
 import org.apache.catalina.connector.Response;
 import org.springframework.http.ResponseEntity;
@@ -24,12 +25,13 @@ public class MemberController {
 	@PostMapping("/signup")
 	public ResponseEntity<String> signup(@RequestBody SignupRequest signupRequest) {
 		memberService.signup(signupRequest);
-		return ResponseEntity.status(Response.SC_CREATED).body("Signup Succeeded");
+		return ResponseEntity.status(Response.SC_CREATED).body("Signup Success");
 	}
 
-	@PostMapping("")
-	public ResponseEntity<String> login(@RequestBody LoginRequest loginRequest) {
-		return ResponseEntity.ok(memberService.login(loginRequest));
+	@PostMapping("/login")
+	public ResponseEntity<String> login(@RequestBody LoginRequest loginRequest, HttpServletResponse response) {
+		memberService.login(loginRequest, response);
+		return ResponseEntity.status(Response.SC_OK).body("Login Success");
 	}
 
 	@GetMapping("")
