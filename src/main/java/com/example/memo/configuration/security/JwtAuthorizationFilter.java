@@ -6,65 +6,46 @@ import jakarta.servlet.FilterChain;
 import jakarta.servlet.ServletException;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
+import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContext;
 import org.springframework.security.core.context.SecurityContextHolder;
+import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.util.StringUtils;
 import org.springframework.web.filter.OncePerRequestFilter;
 
 import java.io.IOException;
 
-@Slf4j
+import static com.example.memo.configuration.security.WebSecurityConfig.ROLE_MEMBER;
+
+@RequiredArgsConstructor
 class JwtAuthorizationFilter extends OncePerRequestFilter {
 
-	private final JwtUtil jwtUtil;
-	private final MemberService memberService;
-
-	JwtAuthorizationFilter(JwtUtil jwtUtil, MemberService memberService) {
-		this.jwtUtil = jwtUtil;
-		this.memberService = memberService;
-	}
+	private final AuthorizedMemberProvider authorizedMemberProvider;
 
 	@Override
 	protected void doFilterInternal(HttpServletRequest request, HttpServletResponse response,
 									FilterChain filterChain) throws ServletException, IOException {
 		// TODO : 요청에 들어온 JWT를 parsing해서 "ROLE_MEMBER" 권한이 있는지 확인하고, SecurityContextHolder에 context 설정하기
-		String tokenValue = jwtUtil.getTokenFromHeader(request);
+		String jwtToken = JwtUtil.getTokenFromHeader(request);
 
-		if (StringUtils.hasText(tokenValue)) {
+		if (!StringUtils.isEmpty(jwtToken)) {
 
-			if (!jwtUtil.validateToken(tokenValue)) {
-				log.error("Token Error");
-				return;
+			Claims userInfo = JwtUtil.getUserInfoFromToken(jwtToken);
+
+			String authority = (String) userInfo.get("auth");
+
+			if (ROLE_MEMBER.equals(authority)) {
+				String username = userInfo.getSubject();
+				UserDetails authorizedMember = authorizedMemberProvider.loadUserByUsername(username);
+				Authentication authentication = new UsernamePasswordAuthenticationToken(authorizedMember,
+						authorizedMember.getPassword(), authorizedMember.getAuthorities());
+				SecurityContextHolder.getContext().setAuthentication(authentication);
 			}
-
-			Claims info = jwtUtil.getUserInfoFromToken(tokenValue);
-
-			try {
-				setAuthentication(info.getSubject());
-			} catch (Exception e) {
-				log.error(e.getMessage());
-				return;
-			}
-		} else {
-			log.info("토큰 없음");
 		}
 
 		filterChain.doFilter(request, response);
-	}
-
-	public void setAuthentication(String email) {
-		SecurityContext context = SecurityContextHolder.createEmptyContext();
-		Authentication authentication = createAuthentication(email);
-		context.setAuthentication(authentication);
-
-		SecurityContextHolder.setContext(context);
-	}
-
-	private Authentication createAuthentication(String email) {
-		memberService.loadUserByUsername(email);
-		return new UsernamePasswordAuthenticationToken(email, null);
 	}
 }

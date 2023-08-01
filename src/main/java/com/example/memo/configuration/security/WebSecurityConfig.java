@@ -1,15 +1,12 @@
 package com.example.memo.configuration.security;
 
-import com.example.memo.domain.model.LoginMemberArgumentResolver;
 import com.example.memo.service.MemberService;
-import jakarta.persistence.PersistenceContext;
+import com.example.memo.service.RememberMeService;
 import lombok.RequiredArgsConstructor;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.autoconfigure.security.servlet.PathRequest;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
-import org.springframework.context.annotation.Lazy;
-import org.springframework.security.authentication.AuthenticationManager;
+import org.springframework.security.config.Customizer;
 import org.springframework.security.config.annotation.authentication.configuration.AuthenticationConfiguration;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
@@ -27,10 +24,10 @@ import java.util.List;
 @RequiredArgsConstructor
 public class WebSecurityConfig {
 
-	private final JwtUtil jwtUtil;
-	private final MemberService memberService;
+	public static final String ROLE_MEMBER = "ROLE_MEMBER";
 	private final AuthenticationConfiguration authenticationConfiguration;
-	private final LoginMemberArgumentResolver loginMemberArgumentResolver;
+	private final AuthorizedMemberProvider authorizedMemberProvider;
+	private final RememberMeService rememberMeService;
 
 	@Bean
 	public PasswordEncoder passwordEncoder() {
@@ -39,35 +36,34 @@ public class WebSecurityConfig {
 
 	@Bean
 	public JwtAuthenticationFilter jwtAuthenticationFilter() throws Exception {
-		JwtAuthenticationFilter filter = new JwtAuthenticationFilter(jwtUtil);
+		JwtAuthenticationFilter filter = new JwtAuthenticationFilter();
 		filter.setAuthenticationManager(authenticationConfiguration.getAuthenticationManager());
+		filter.setRememberMeServices(rememberMeService);
 		return filter;
 	}
 
 	@Bean
 	public JwtAuthorizationFilter jwtAuthorizationFilter() {
-		return new JwtAuthorizationFilter(jwtUtil, memberService);
+		return new JwtAuthorizationFilter(authorizedMemberProvider);
 	}
 
 	@Bean
 	public SecurityFilterChain securityFilterChain(HttpSecurity httpSecurity) throws Exception {
 		httpSecurity
-			.httpBasic(AbstractHttpConfigurer::disable)
-			.csrf(AbstractHttpConfigurer::disable)
-			.addFilter(jwtAuthenticationFilter())
-			.addFilterAfter(jwtAuthorizationFilter(), JwtAuthenticationFilter.class)
-			.sessionManagement(sessionManagement -> sessionManagement.sessionCreationPolicy(
-				SessionCreationPolicy.STATELESS))
-			.authorizeHttpRequests(httpRequests -> httpRequests
-				.requestMatchers(PathRequest.toStaticResources().atCommonLocations()).permitAll()
-				.requestMatchers("/api/members/**").permitAll()
-				.anyRequest().authenticated());
+				.httpBasic(AbstractHttpConfigurer::disable)
+				.csrf(AbstractHttpConfigurer::disable)
+				.formLogin(Customizer.withDefaults())
+				.rememberMe(configurer -> configurer.rememberMeServices(rememberMeService))
+				.addFilter(jwtAuthenticationFilter())
+				.addFilterBefore(jwtAuthorizationFilter(), JwtAuthenticationFilter.class)
+				.sessionManagement(sessionManagement -> sessionManagement.sessionCreationPolicy(
+						SessionCreationPolicy.STATELESS))
+				.authorizeHttpRequests(httpRequests -> httpRequests
+						.requestMatchers(PathRequest.toStaticResources().atCommonLocations()).permitAll()
+						.requestMatchers("/api/members/**").permitAll()
+						.anyRequest().authenticated())
+				.oauth2Login(Customizer.withDefaults());
 
 		return httpSecurity.build();
-	}
-
-	@Bean
-	public void addArgumentResolvers(List<HandlerMethodArgumentResolver> resolvers) {
-		resolvers.add(loginMemberArgumentResolver);
 	}
 }

@@ -18,19 +18,10 @@ import org.springframework.stereotype.Service;
 
 @Service
 @RequiredArgsConstructor
-public class MemberService implements UserDetailsService {
+public class MemberService {
 
 	private final MemberRepository memberRepository;
 	private final PasswordEncoder passwordEncoder;
-
-	@Override
-	public UserDetails loadUserByUsername(String email) throws UsernameNotFoundException {
-		Member member = memberRepository.findByEmail(email);
-		if (member == null) {
-			throw new UsernameNotFoundException(email);
-		}
-		return new AuthorizedMember(member);
-	}
 
 	public void signup(SignupRequest signupRequest) {
 		Member member = new Member(signupRequest.email(), signupRequest.name(),
@@ -50,6 +41,6 @@ public class MemberService implements UserDetailsService {
 			throw new BadCredentialsException("잘못된 요청입니다. 아이디 또는 비밀번호를 확인해주세요.");
 		}
 
-		return JwtUtil.createToken(loginRequest.email());
+		return JwtUtil.createTokenWithScheme(loginRequest.email());
 	}
 }

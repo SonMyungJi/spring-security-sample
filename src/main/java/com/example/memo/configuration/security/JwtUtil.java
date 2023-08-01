@@ -1,37 +1,31 @@
 package com.example.memo.configuration.security;
 
-import io.jsonwebtoken.Claims;
-import io.jsonwebtoken.ExpiredJwtException;
-import io.jsonwebtoken.Jwts;
-import io.jsonwebtoken.MalformedJwtException;
-import io.jsonwebtoken.SignatureAlgorithm;
-import io.jsonwebtoken.UnsupportedJwtException;
+import io.jsonwebtoken.*;
 import io.jsonwebtoken.security.Keys;
 import jakarta.servlet.http.HttpServletRequest;
-import java.security.Key;
-import java.util.Date;
 import lombok.experimental.UtilityClass;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.context.annotation.Bean;
 import org.springframework.stereotype.Component;
 import org.springframework.util.StringUtils;
 
+import java.security.Key;
+import java.util.Date;
+
 
 @Slf4j
-@Component
+@UtilityClass
 public class JwtUtil {
 	private final String AUTHORIZATION_HEADER = "Authorization";
-	private static final String AUTHORIZATION_KEY = "auth";
-	private static final String BEARER_PREFIX = "Bearer ";
+	private final String AUTHORIZATION_KEY = "auth";
+	private final String BEARER_PREFIX = "Bearer ";
 
 	private final int VALUE_INDEX = 7;
-	private static final long TOKEN_DURATION = 60 * 60 * 1000L; // 60분
+	private final long TOKEN_DURATION = 60 * 60 * 1000L; // 60분
 
-	private static final SignatureAlgorithm signatureAlgorithm = SignatureAlgorithm.HS256;
-	private static final Key key = Keys.secretKeyFor(signatureAlgorithm);
+	private final SignatureAlgorithm signatureAlgorithm = SignatureAlgorithm.HS256;
+	private final Key key = Keys.secretKeyFor(signatureAlgorithm);
 
-	public static String createToken(String username) {
+	public String createTokenWithScheme(String username) {
 		Date now = new Date();
 
 		return BEARER_PREFIX +
@@ -42,6 +36,13 @@ public class JwtUtil {
 				.setIssuedAt(now) // 발급일
 				.signWith(key, signatureAlgorithm) // 암호화 알고리즘
 				.compact();
+	}
+
+	public String getToken(String tokenWithScheme) {
+		if (tokenWithScheme.startsWith(BEARER_PREFIX)) {
+			return tokenWithScheme.substring(VALUE_INDEX);
+		}
+		return null;
 	}
 
 	public String getTokenFromHeader(HttpServletRequest request) {
@@ -68,7 +69,18 @@ public class JwtUtil {
 		return false;
 	}
 
+	// 3. 추출
 	public Claims getUserInfoFromToken(String token) {
-		return Jwts.parserBuilder().setSigningKey(key).build().parseClaimsJws(token).getBody();
+		return getClaimsJws(token).getBody();
+	}
+
+	// 2. 해석
+	private static Jws<Claims> getClaimsJws(String token) {
+		return getBuild().parseClaimsJws(token);
+	}
+
+	// 1. 인증
+	private static JwtParser getBuild() {
+		return Jwts.parserBuilder().setSigningKey(key).build();
 	}
 }

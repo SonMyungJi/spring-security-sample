@@ -1,13 +1,12 @@
 package com.example.memo.controller.api;
 
 import com.example.memo.domain.entity.Member;
-import com.example.memo.domain.model.AuthorizedMember;
-import com.example.memo.domain.model.LoginMember;
 import com.example.memo.dto.LoginRequest;
 import com.example.memo.dto.MemberInfo;
 import com.example.memo.dto.SignupRequest;
 import com.example.memo.service.MemberService;
 import lombok.RequiredArgsConstructor;
+import org.apache.catalina.connector.Response;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PostMapping;
@@ -25,7 +24,7 @@ public class MemberController {
 	@PostMapping("/signup")
 	public ResponseEntity<String> signup(@RequestBody SignupRequest signupRequest) {
 		memberService.signup(signupRequest);
-		return ResponseEntity.status(201).body("Signup Succeeded");
+		return ResponseEntity.status(Response.SC_CREATED).body("Signup Succeeded");
 	}
 
 	@PostMapping("")
@@ -34,7 +33,7 @@ public class MemberController {
 	}
 
 	@GetMapping("")
-	public ResponseEntity<MemberInfo> getMemberInfo(@LoginMember Member member) {
+	public ResponseEntity<MemberInfo> getMemberInfo(Member member) {
 		if (member == null) {
 			return ResponseEntity.badRequest().build();
 		}
