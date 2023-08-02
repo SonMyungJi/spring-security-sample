@@ -15,8 +15,6 @@ class JwtAuthenticationFilter extends UsernamePasswordAuthenticationFilter {
 
 	private final JwtUtil jwtUtil;
 
-	// AbstractAuthenticationProcessingFilter의 메서드를 override
-	// doFilter에서 인증에 성공 -> successfulAuthentication
 	@Override
 	protected void successfulAuthentication(HttpServletRequest request, HttpServletResponse response, FilterChain chain, Authentication authResult) throws IOException {
 		// TODO : 올바른 인증 요청에 대한 결과로 jwt token 만들고, 검증한 후에 201 response로 해당 token 세팅하기
