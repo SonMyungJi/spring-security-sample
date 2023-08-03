@@ -28,7 +28,7 @@ public class WebSecurityConfig {
 	private final AuthenticationConfiguration authenticationConfiguration;
 	private final AuthorizedMemberProvider authorizedMemberProvider;
 	private final RememberMeService rememberMeService;
-	private final TokenLogoutHandler tokenLogoutHandler;
+//	private final TokenLogoutHandler tokenLogoutHandler;
 
 	@Bean
 	public PasswordEncoder passwordEncoder() {
@@ -68,10 +68,8 @@ public class WebSecurityConfig {
 						.anyRequest().authenticated())
 //				.oauth2Login(Customizer.withDefaults());
 				.logout((logout -> logout
-						.logoutUrl("/api/members/logout")
 						.invalidateHttpSession(true)
-						.deleteCookies("jwt")
-						.addLogoutHandler(tokenLogoutHandler)));
+						.deleteCookies("jwt")));
 
 		httpSecurity.addFilterBefore(jwtAuthorizationFilter(), JwtAuthenticationFilter.class);
 

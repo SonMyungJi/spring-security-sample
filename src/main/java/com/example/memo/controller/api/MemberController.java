@@ -1,14 +1,18 @@
 package com.example.memo.controller.api;
 
+import com.example.memo.configuration.security.JwtUtil;
+import com.example.memo.configuration.security.redis.RedisUtil;
 import com.example.memo.domain.entity.Member;
 import com.example.memo.dto.LoginRequest;
 import com.example.memo.dto.MemberInfo;
 import com.example.memo.dto.SignupRequest;
 import com.example.memo.service.MemberService;
+import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import lombok.RequiredArgsConstructor;
 import org.apache.catalina.connector.Response;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.core.Authentication;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
@@ -21,6 +25,8 @@ import org.springframework.web.bind.annotation.RestController;
 public class MemberController {
 
 	private final MemberService memberService;
+	private final RedisUtil redisUtil;
+	private final JwtUtil jwtUtil;
 
 	@PostMapping("/signup")
 	public ResponseEntity<String> signup(@RequestBody SignupRequest signupRequest) {
@@ -32,6 +38,19 @@ public class MemberController {
 	public ResponseEntity<String> login(@RequestBody LoginRequest loginRequest, HttpServletResponse response) {
 		memberService.login(loginRequest, response);
 		return ResponseEntity.status(Response.SC_OK).body("Login Success");
+	}
+
+	@PostMapping("/logout")
+	public ResponseEntity<String> logout(HttpServletRequest request, HttpServletResponse response, Authentication authentication) {
+		String token = jwtUtil.getTokenFromHeader(request);
+
+		// 유효하지 않은 토큰이면 로그아웃 거부
+		if (!jwtUtil.validateToken(token)) {
+			return ResponseEntity.status(Response.SC_BAD_REQUEST).body("로그아웃 거부");
+		}
+
+		redisUtil.addTokenToBlacklist(token);
+		return ResponseEntity.status(Response.SC_OK).body("Logout Success");
 	}
 
 	@GetMapping("")
