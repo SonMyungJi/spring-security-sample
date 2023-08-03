@@ -6,6 +6,7 @@ import com.example.memo.domain.entity.Member;
 import com.example.memo.dto.LoginRequest;
 import com.example.memo.dto.SignupRequest;
 import com.example.memo.repository.MemberRepository;
+import jakarta.servlet.http.Cookie;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import lombok.RequiredArgsConstructor;
@@ -51,9 +52,7 @@ public class MemberService {
 
 	public void logout(HttpServletRequest request, HttpServletResponse response, Authentication authentication) {
 		String token = jwtUtil.getTokenFromHeader(request);
-
 		// 유효하지 않은 토큰은 authentication부터 안 만들어짐
-
 		redisUtil.addTokenToBlacklist(token);
 	}
 }
