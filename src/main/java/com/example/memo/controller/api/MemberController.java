@@ -25,8 +25,6 @@ import org.springframework.web.bind.annotation.RestController;
 public class MemberController {
 
 	private final MemberService memberService;
-	private final RedisUtil redisUtil;
-	private final JwtUtil jwtUtil;
 
 	@PostMapping("/signup")
 	public ResponseEntity<String> signup(@RequestBody SignupRequest signupRequest) {
@@ -42,14 +40,7 @@ public class MemberController {
 
 	@PostMapping("/logout")
 	public ResponseEntity<String> logout(HttpServletRequest request, HttpServletResponse response, Authentication authentication) {
-		String token = jwtUtil.getTokenFromHeader(request);
-
-		// 유효하지 않은 토큰이면 로그아웃 거부
-		if (!jwtUtil.validateToken(token)) {
-			return ResponseEntity.status(Response.SC_BAD_REQUEST).body("로그아웃 거부");
-		}
-
-		redisUtil.addTokenToBlacklist(token);
+		memberService.logout(request, response, authentication);
 		return ResponseEntity.status(Response.SC_OK).body("Logout Success");
 	}
 

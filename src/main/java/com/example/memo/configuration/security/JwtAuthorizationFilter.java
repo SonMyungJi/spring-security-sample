@@ -30,18 +30,20 @@ class JwtAuthorizationFilter extends OncePerRequestFilter {
 		String jwtToken = jwtUtil.getTokenFromHeader(request);
 
 		if (!StringUtils.isEmpty(jwtToken)) {
+			if (!jwtUtil.validateToken(jwtToken)) {
+				Claims userInfo = jwtUtil.getUserInfoFromToken(jwtToken);
 
-			Claims userInfo = jwtUtil.getUserInfoFromToken(jwtToken);
+				String authority = (String) userInfo.get("auth");
 
-			String authority = (String) userInfo.get("auth");
-
-			if (ROLE_MEMBER.equals(authority)) {
-				String username = userInfo.getSubject();
-				UserDetails authorizedMember = authorizedMemberProvider.loadUserByUsername(username);
-				Authentication authentication = new UsernamePasswordAuthenticationToken(authorizedMember,
-						authorizedMember.getPassword(), authorizedMember.getAuthorities());
-				SecurityContextHolder.getContext().setAuthentication(authentication);
+				if (ROLE_MEMBER.equals(authority)) {
+					String username = userInfo.getSubject();
+					UserDetails authorizedMember = authorizedMemberProvider.loadUserByUsername(username);
+					Authentication authentication = new UsernamePasswordAuthenticationToken(authorizedMember,
+							authorizedMember.getPassword(), authorizedMember.getAuthorities());
+					SecurityContextHolder.getContext().setAuthentication(authentication);
+				}
 			}
+
 		}
 
 		filterChain.doFilter(request, response);

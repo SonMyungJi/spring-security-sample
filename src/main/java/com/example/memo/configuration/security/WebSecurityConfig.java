@@ -28,7 +28,6 @@ public class WebSecurityConfig {
 	private final AuthenticationConfiguration authenticationConfiguration;
 	private final AuthorizedMemberProvider authorizedMemberProvider;
 	private final RememberMeService rememberMeService;
-//	private final TokenLogoutHandler tokenLogoutHandler;
 
 	@Bean
 	public PasswordEncoder passwordEncoder() {

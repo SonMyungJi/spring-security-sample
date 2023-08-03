@@ -61,6 +61,7 @@ public class JwtUtil {
 			// 토큰의 위변조, 만료 체크
 			Jwts.parserBuilder().setSigningKey(key).build().parseClaimsJws(token);
 			return true;
+
 		} catch (SecurityException | MalformedJwtException e) {
 			log.error("Invalid JWT signature, 유효하지 않는 JWT 서명 입니다.");
 		} catch (ExpiredJwtException e) {

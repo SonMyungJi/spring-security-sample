@@ -1,13 +1,16 @@
 package com.example.memo.service;
 
 import com.example.memo.configuration.security.JwtUtil;
+import com.example.memo.configuration.security.redis.RedisUtil;
 import com.example.memo.domain.entity.Member;
 import com.example.memo.dto.LoginRequest;
 import com.example.memo.dto.SignupRequest;
 import com.example.memo.repository.MemberRepository;
+import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import lombok.RequiredArgsConstructor;
 import org.springframework.security.authentication.BadCredentialsException;
+import org.springframework.security.core.Authentication;
 import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
@@ -22,6 +25,7 @@ public class MemberService {
 	private final MemberRepository memberRepository;
 	private final PasswordEncoder passwordEncoder;
 	private final JwtUtil jwtUtil;
+	private final RedisUtil redisUtil;
 
 	public void signup(SignupRequest signupRequest) {
 		Member member = new Member(signupRequest.email(), signupRequest.name(),
@@ -43,5 +47,13 @@ public class MemberService {
 
 		String token = jwtUtil.createTokenWithScheme(loginRequest.email());
 		response.addHeader("Authorization", token);
+	}
+
+	public void logout(HttpServletRequest request, HttpServletResponse response, Authentication authentication) {
+		String token = jwtUtil.getTokenFromHeader(request);
+
+		// 유효하지 않은 토큰은 authentication부터 안 만들어짐
+
+		redisUtil.addTokenToBlacklist(token);
 	}
 }
