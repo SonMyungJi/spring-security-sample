@@ -41,6 +41,18 @@ public class JwtUtil {
 				.compact();
 	}
 
+	public String createRefreshTokenWithScheme(String username) {
+		Date now = new Date();
+
+		// 불필요한 사용자 정보 삭제
+		return Jwts.builder()
+						.setSubject(username) // 사용자 식별자값(ID)
+						.setExpiration(new Date(now.getTime() + TOKEN_DURATION)) // 만료 시간
+						.setIssuedAt(now) // 발급일
+						.signWith(key, signatureAlgorithm) // 암호화 알고리즘
+						.compact();
+	}
+
 	public String getToken(String tokenWithScheme) {
 		if (tokenWithScheme.startsWith(BEARER_PREFIX)) {
 			return tokenWithScheme.substring(VALUE_INDEX);

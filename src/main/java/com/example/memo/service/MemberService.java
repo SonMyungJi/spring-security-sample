@@ -6,6 +6,7 @@ import com.example.memo.domain.entity.Member;
 import com.example.memo.dto.LoginRequest;
 import com.example.memo.dto.SignupRequest;
 import com.example.memo.repository.MemberRepository;
+import io.jsonwebtoken.Claims;
 import jakarta.servlet.http.Cookie;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
@@ -47,12 +48,43 @@ public class MemberService {
 		}
 
 		String token = jwtUtil.createTokenWithScheme(loginRequest.email());
+		String refreshToken = jwtUtil.createRefreshTokenWithScheme(loginRequest.email());
+
+		redisUtil.saveRefreshToken(member.getEmail(), refreshToken);
+
 		response.addHeader("Authorization", token);
+		addRefreshTokenCookie(response, refreshToken);
 	}
 
-	public void logout(HttpServletRequest request, HttpServletResponse response, Authentication authentication) {
+	private void addRefreshTokenCookie(HttpServletResponse response, String refreshToken) {
+		// 새로운 Cookie 객체 생성
+		Cookie refreshTokenCookie = new Cookie("refreshToken", refreshToken);
+
+		// 쿠키의 유효 기간 설정 (예: 1주일로 설정)
+		refreshTokenCookie.setMaxAge(7 * 24 * 60 * 60); // 1주일(초단위)
+
+		// 쿠키 경로 설정 (예: 서버의 모든 경로에서 접근 가능하도록 설정)
+		refreshTokenCookie.setPath("/");
+
+		// HttpOnly 설정
+		refreshTokenCookie.setHttpOnly(true);
+
+		// Secure 설정 (HTTPS에서만 쿠키 전송)
+//		refreshTokenCookie.setSecure(true);
+
+		// 쿠키를 Response 객체에 추가
+		response.addCookie(refreshTokenCookie);
+	}
+
+	public void logout(HttpServletRequest request) {
 		String token = jwtUtil.getTokenFromHeader(request);
-		// 유효하지 않은 토큰은 authentication부터 안 만들어짐
-		redisUtil.addTokenToBlacklist(token);
+		Claims userInfo = jwtUtil.getUserInfoFromToken(token);
+		String username = userInfo.getSubject();
+
+		// refreshToken은 redis에서 삭제
+		redisUtil.deleteRefreshToken(username);
+
+		// accessToken은 redis의 blacklist에 저장
+		redisUtil.addTokenToBlacklist(username, token);
 	}
 }

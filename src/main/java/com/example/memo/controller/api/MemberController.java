@@ -39,8 +39,8 @@ public class MemberController {
 	}
 
 	@PostMapping("/logout")
-	public ResponseEntity<String> logout(HttpServletRequest request, HttpServletResponse response, Authentication authentication) {
-		memberService.logout(request, response, authentication);
+	public ResponseEntity<String> logout(HttpServletRequest request) {
+		memberService.logout(request);
 		return ResponseEntity.status(Response.SC_OK).body("Logout Success");
 	}
 
