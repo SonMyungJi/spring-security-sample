@@ -1,6 +1,7 @@
 package com.example.memo.configuration.security;
 
 import io.jsonwebtoken.Claims;
+import io.jsonwebtoken.Jwts;
 import jakarta.servlet.FilterChain;
 import jakarta.servlet.ServletException;
 import jakarta.servlet.http.HttpServletRequest;
@@ -30,7 +31,7 @@ class JwtAuthorizationFilter extends OncePerRequestFilter {
 		String jwtToken = jwtUtil.getTokenFromHeader(request);
 
 		if (!StringUtils.isEmpty(jwtToken)) {
-			if (!jwtUtil.validateToken(jwtToken)) {
+			if (!jwtUtil.validateToken(request, response, jwtToken)) {
 				return;
 			}
 			Claims userInfo = jwtUtil.getUserInfoFromToken(jwtToken);

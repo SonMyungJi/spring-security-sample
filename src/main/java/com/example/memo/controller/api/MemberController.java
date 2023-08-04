@@ -1,7 +1,5 @@
 package com.example.memo.controller.api;
 
-import com.example.memo.configuration.security.JwtUtil;
-import com.example.memo.configuration.security.redis.RedisUtil;
 import com.example.memo.domain.entity.Member;
 import com.example.memo.dto.LoginRequest;
 import com.example.memo.dto.MemberInfo;
@@ -12,12 +10,7 @@ import jakarta.servlet.http.HttpServletResponse;
 import lombok.RequiredArgsConstructor;
 import org.apache.catalina.connector.Response;
 import org.springframework.http.ResponseEntity;
-import org.springframework.security.core.Authentication;
-import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.RequestBody;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.*;
 
 @RestController
 @RequestMapping("/api/members")
